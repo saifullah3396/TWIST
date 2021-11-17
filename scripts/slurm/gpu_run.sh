@@ -88,5 +88,5 @@ srun \
     --cpus-per-gpu=4 \
     --mem $MEMORY \ 
     -p $PARTITION \
-    --export="NCCL_SOCKET_IFNAME=bond,NCCL_IB_HCA=mlx5,ROOT_DIR=/,NETSCRATCH_DAS=/netscratch/$USER/document_analysis_stack,PYTHONPATH=$PYTHONPATH:/home/$USER/document_analysis_stack/src,TORCH_HOME=/netscratch/$USER/document_analysis_stack/pretrained,CUDA_LAUNCH_BLOCKING=1,CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8" \
+    --export="NCCL_SOCKET_IFNAME=bond,NCCL_IB_HCA=mlx5,ROOT_DIR=/,NETSCRATCH_DAS=/netscratch/$USER/document_analysis_stack,PYTHONPATH=$PYTHONPATH:/home/$USER/document_analysis_stack/src,TORCH_HOME=/netscratch/$USER/document_analysis_stack/pretrained,MASTER_PORT=12345,WORLD_SIZE=2" \
     $CMD
