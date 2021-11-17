@@ -64,7 +64,7 @@ Initializes the training of a model given dataset, and their configurations.
 """
 
 # parse arguments
-cfg = 'cfg/dataset.yaml'
+cfg = './cfg/dataset.yaml'
 basic_args, data_args = parse_args(cfg)
 from das.data.data_modules.base import DataModuleFactory
 
@@ -72,6 +72,7 @@ from das.data.data_modules.base import DataModuleFactory
 datamodule = DataModuleFactory.create_datamodule(
     basic_args, data_args)
 
+print(basic_args, data_args)
 # prepare the modules
 datamodule.prepare_data()
 datamodule.setup()
