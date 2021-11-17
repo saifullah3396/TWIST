@@ -318,7 +318,7 @@ def main(args):
     if args.crops_interact_style == 'self_label':
         assert args.mme_epochs == args.epochs
 
-    utils.init_distributed_mode(args)
+    # utils.init_distributed_mode(args)
     print(args)
     return
 
