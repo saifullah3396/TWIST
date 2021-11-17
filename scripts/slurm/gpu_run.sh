@@ -89,5 +89,5 @@ srun \
     --cpus-per-gpu=4 \
     --mem $MEMORY \
     -p $PARTITION \
-    --export="NCCL_SOCKET_IFNAME=bond,NCCL_IB_HCA=mlx5,ROOT_DIR=/,NETSCRATCH_DAS=/netscratch/$USER/document_analysis_stack,PYTHONPATH=$PYTHONPATH:/home/$USER/document_analysis_stack/src,TORCH_HOME=/netscratch/$USER/document_analysis_stack/pretrained,MASTER_ADDR=$SLURM_LAUNCH_NODE_IPADDR,MASTER_PORT=12345,WORLD_SIZE=2" \
+    --export="NCCL_SOCKET_IFNAME=bond,NCCL_IB_HCA=mlx5,ROOT_DIR=/,NETSCRATCH_DAS=/netscratch/$USER/document_analysis_stack,PYTHONPATH=$PYTHONPATH:/home/$USER/document_analysis_stack/src,TORCH_HOME=/netscratch/$USER/document_analysis_stack/pretrained,MASTER_PORT=12345,WORLD_SIZE=2" \
     $CMD
