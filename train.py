@@ -304,6 +304,7 @@ def main(args):
         assert args.mme_epochs == args.epochs
 
     print('orch.cuda.device_count()', torch.cuda.device_count())
+    return
 
     utils.init_distributed_mode(args)
     print(args)
@@ -353,10 +354,6 @@ def main(args):
     sampler_train = torch.utils.data.DistributedSampler(
         dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
     )
-
-    def collate_fn(features):
-        return [[sample['image'], sample['label']] for sample in features]
-
 
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, sampler=sampler_train,
