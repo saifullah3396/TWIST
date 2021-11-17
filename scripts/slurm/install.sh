@@ -7,7 +7,7 @@ DONEFILE="/tmp/install_done_${SLURM_JOBID}"
 if [[ $SLURM_LOCALID == 0 ]]; then
 
   # install python dependencies
-  pip install -r $SCRIPT_DIR/../../cluster_requirements.txt
+  pip install -r $SCRIPT_DIR/../../requirements.txt
 
   # Tell other tasks we are done installing
   touch "${DONEFILE}"
