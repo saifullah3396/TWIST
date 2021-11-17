@@ -63,20 +63,6 @@ def parse_args(cfg):
 Initializes the training of a model given dataset, and their configurations.
 """
 
-# parse arguments
-cfg = './cfg/dataset.yaml'
-basic_args, data_args = parse_args(cfg)
-from das.data.data_modules.base import DataModuleFactory
-
-# initialize data-handling module, set collate_fns later
-datamodule = DataModuleFactory.create_datamodule(
-    basic_args, data_args)
-
-# prepare the modules
-datamodule.prepare_data()
-datamodule.setup()
-dataset = datamodule.train_dataset
-
 def get_args_parser():
     parser = argparse.ArgumentParser('Self-Supervised', add_help=False)
     parser.add_argument('--dataset', type=str, default='imagenet')
@@ -345,6 +331,20 @@ def main(args):
         torch.backends.cudnn.benchmark = False
 
     # =================== Data Preparation =================== 
+    # parse arguments
+    cfg = './cfg/dataset.yaml'
+    basic_args, data_args = parse_args(cfg)
+    from das.data.data_modules.base import DataModuleFactory
+
+    # initialize data-handling module, set collate_fns later
+    datamodule = DataModuleFactory.create_datamodule(
+        basic_args, data_args)
+
+    # prepare the modules
+    datamodule.prepare_data()
+    datamodule.setup()
+    dataset = datamodule.train_dataset
+
     dataset_train = datamodule.train_dataset
     dataset_train.transforms = get_augmentations(args)
 
