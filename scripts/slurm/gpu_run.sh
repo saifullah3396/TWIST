@@ -83,10 +83,11 @@ srun \
     --container-mounts=/netscratch/$USER:/netscratch/$USER,/ds:/ds:ro,/home/$USER/document_analysis_stack:/home/$USER/document_analysis_stack,/home/$USER/TWIST:/home/$USER/TWIST \
     --task-prolog=./scripts/slurm/install.sh \
     -K \
+    --nodes 1 \
     --ntasks=$N_GPUS \
     --gpus-per-task=1 \
     --cpus-per-gpu=4 \
-    --mem $MEMORY \ 
+    --mem $MEMORY \
     -p $PARTITION \
     --export="NCCL_SOCKET_IFNAME=bond,NCCL_IB_HCA=mlx5,ROOT_DIR=/,NETSCRATCH_DAS=/netscratch/$USER/document_analysis_stack,PYTHONPATH=$PYTHONPATH:/home/$USER/document_analysis_stack/src,TORCH_HOME=/netscratch/$USER/document_analysis_stack/pretrained,MASTER_PORT=12345,WORLD_SIZE=2" \
     $CMD
