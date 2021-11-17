@@ -320,6 +320,7 @@ def main(args):
 
     utils.init_distributed_mode(args)
     print(args)
+    return
 
     output_dir = Path(args.output_dir)
     args.global_crops_scale = (args.min1, args.max1)
