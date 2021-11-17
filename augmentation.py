@@ -8,6 +8,9 @@ import random
 from torchvision import transforms
 from PIL import Image, ImageOps, ImageFilter
 from timm.data import create_transform
+from torchvision.transforms.transforms import ToPILImage
+from das.data.transforms.dict_transform import DictTransform
+from das.data.transforms.grayscale_to_rgb import GrayScaleToRGB
 
 class GaussianBlur(object):
     """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
@@ -34,7 +37,13 @@ def get_augmentations(args):
     if args.aug == 'moco':
         return MocoAugmentations(args)
     if args.aug == 'barlow':
-        return BarlowtwinsAugmentations(args)
+        return \
+            transforms.Compose([
+                DictTransform(['image'], BarlowtwinsAugmentations(args))])
+    if args.aug == 'docs':
+        return \
+            transforms.Compose([
+                DictTransform(['image'], DocumentAugmentations(args))])
     if args.aug == 'multicrop':
         return MultiCropAugmentation(args)
     if args.aug == 'multicropeval':
@@ -61,16 +70,102 @@ class RandAugmentation(object):
         crops.append(self.aug(image))
         return crops
 
+class DocumentAugmentations(object):
+    def __init__(self, args):
+        self.aug1 = transforms.Compose([
+            GrayScaleToRGB(),
+            transforms.ToPILImage(),
+            transforms.Resize((args.img_size, args.img_size)),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine((-5, 5))], 
+                p=0.5
+            ),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine(0, translate=(0.2, 0.2))], 
+                p=0.5
+            ),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine(0, scale=(0.8, 1.0))], 
+                p=0.5
+            ),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine(0, shear=(-5, 5))], 
+                p=0.5
+            ),
+
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomApply(
+                [transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1)],
+                p=0.8
+            ),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.RandomApply([GaussianBlur([.1, .5])], p=1.0),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        self.aug2 = transforms.Compose([
+            GrayScaleToRGB(),
+            transforms.ToPILImage(),
+            transforms.Resize((args.img_size, args.img_size)),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine((-5, 5))], 
+                p=0.5
+            ),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine(0, translate=(0.2, 0.2))], 
+                p=0.5
+            ),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine(0, scale=(0.8, 1.0))], 
+                p=0.5
+            ),
+            transforms.RandomApply(
+                [   
+                    transforms.RandomAffine(0, shear=(-5, 5))], 
+                p=0.5
+            ),
+
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomApply(
+                [transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1)],
+                p=0.8
+            ),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.RandomApply([GaussianBlur([.1, .5])], p=1.0),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+
+    def __call__(self, image):
+        crops = []
+        crops.append(self.aug1(image))
+        crops.append(self.aug2(image))
+        return crops
+        
 class MocoAugmentations(object):
     def __init__(self, args):
         self.aug = transforms.Compose([
-            transforms.RandomResizedCrop(args.img_size, scale=(0.2, 1.), interpolation=Image.BICUBIC),
-            transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),]) 
+            DictTransform(['image'], 
+                transforms.RandomResizedCrop(args.img_size, scale=(0.2, 1.), interpolation=Image.BICUBIC)),
+            DictTransform(['image'], 
+                transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8)),
+            DictTransform(['image'], 
+                transforms.RandomGrayscale(p=0.2)),
+            DictTransform(['image'], 
+                transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5)),
+            DictTransform(['image'], 
+                transforms.RandomHorizontalFlip()),
+            DictTransform(['image'], 
+                transforms.ToTensor()),
+            DictTransform(['image'], 
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])),]) 
 
     def __call__(self, image):
         crops = []
@@ -81,28 +176,32 @@ class MocoAugmentations(object):
 class BarlowtwinsAugmentations(object):
     def __init__(self, args):
         self.aug1 = transforms.Compose([
-            transforms.RandomResizedCrop(args.img_size, interpolation=Image.BICUBIC),
+            GrayScaleToRGB(),
+            ToPILImage(),
+            transforms.Resize(args.img_size),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomApply(
-                [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)],
+                [transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1)],
                 p=0.8
             ),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([GaussianBlur([.1, 2.])], p=1.0),
-            Solarization(p=0.0),
+            # transforms.RandomGrayscale(p=0.2),
+            transforms.RandomApply([GaussianBlur([.1, .5])], p=1.0),
+            # Solarization(p=0.0),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         self.aug2 = transforms.Compose([
-            transforms.RandomResizedCrop(args.img_size, interpolation=Image.BICUBIC),
+            GrayScaleToRGB(),
+            ToPILImage(),
+            transforms.Resize(args.img_size),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomApply(
-                [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)],
+                [transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1)],
                 p=0.8
             ),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.1),
-            Solarization(p=0.2),
+            # transforms.RandomGrayscale(p=0.2),
+            # transforms.RandomApply([GaussianBlur([.1, 1.])], p=0.1),
+            # Solarization(p=0.2),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])

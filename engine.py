@@ -33,7 +33,9 @@ def train_one_epoch(args, model, criterion, data_loader, optimizer, device, epoc
     real_labels, pred_labels = [], []
     print_freq, iteration = 10, 0
 
-    for imgs, real_label, img_index in metric_logger.log_every(data_loader, print_freq, header):
+    for data in metric_logger.log_every(data_loader, print_freq, header):
+        imgs = data['image']
+        real_label = data['label']
         utils.adjust_learning_rate(args, optimizer, data_loader, epoch*len(data_loader)+iteration)
         for i_pg, param_group in enumerate(optimizer.param_groups):
             if i_pg == 0:  # only the first group is regularized

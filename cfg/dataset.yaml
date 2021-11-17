@@ -1,0 +1,43 @@
+basic_args:
+  output_dir: ${NETSCRATCH_DAS}/output/
+  overwrite_output_dir: False
+  seed: 42
+  n_gpu: 1
+  n_nodes: 1
+  distributed_accelerator: null
+  do_train: True
+  do_eval: True
+  do_test: True
+
+data_args:
+  dataset_name: rvlcdip
+  dataset_dir: ${ROOT_DIR}netscratch/saifullah/rvl-cdip-wo-tobacco3842/
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  dataloader_drop_last: False
+  shuffle_data: True
+  pin_memory: True
+  dataloader_num_workers: 4
+  tokenize_dataset: False
+  dataset_cache_dir: ${NETSCRATCH_DAS}/datasets/
+  use_datadings: False
+  cache_resized_images: False
+  cache_image_size: [224, 224]
+  load_data_to_ram: False
+  cached_data_name: "resized_224x224"
+  tokenize_dataset: False
+  # tokenizer_lib: huggingface
+  # tokenizer_name: microsoft/layoutlmv2-base-uncased
+  # pad_to_max_length: True
+  # max_train_samples: 100
+  # max_val_samples: 100
+  # max_test_samples: null
+  # label_all_tokens: False
+  train_val_sampling_strategy: null
+  random_split_ratio: 0
+  # k_folds: 1
+  normalize_dataset: False
+  load_images: True
+  convert_grayscale_to_rgb: False
+  convert_rgb_to_bgr: False
+  aspect_ratio_grouping_factor: -1

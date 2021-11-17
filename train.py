@@ -15,10 +15,10 @@ import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import json
 from pathlib import Path
+from das.data.transforms.dict_transform import DictTransform
 from objective import *
 from timm.scheduler import create_scheduler
 from timm.utils import get_state_dict
-from datasets import ImageNet, ImageNetLMDB
 from augmentation import get_augmentations
 from engine import train_one_epoch, eval_one_epoch, inference
 import utils
@@ -35,6 +35,47 @@ from functools import partial
 from torchvision import transforms
 warnings.filterwarnings('ignore')
 
+import argparse
+import dataclasses
+import gc
+import logging
+import os
+
+import numpy as np
+import torch
+from das.utils.basic_args import BasicArguments
+from das.data.data_args import DataArguments
+from das.utils.arg_parser import DASArgumentParser
+
+# define dataclasses to parse arguments from
+ARG_DATA_CLASSES = [BasicArguments, DataArguments]
+
+def parse_args(cfg):
+    """
+    Parses script arguments.
+    """
+    # initialize the argument parsers
+    arg_parser = DASArgumentParser(ARG_DATA_CLASSES)
+
+    return arg_parser.parse_yaml_file(os.path.abspath(cfg))
+
+"""
+Initializes the training of a model given dataset, and their configurations.
+"""
+
+# parse arguments
+cfg = 'cfg/dataset.yaml'
+basic_args, data_args = parse_args(cfg)
+from das.data.data_modules.base import DataModuleFactory
+
+# initialize data-handling module, set collate_fns later
+datamodule = DataModuleFactory.create_datamodule(
+    basic_args, data_args)
+
+# prepare the modules
+datamodule.prepare_data()
+datamodule.setup()
+dataset = datamodule.train_dataset
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Self-Supervised', add_help=False)
@@ -193,6 +234,7 @@ class ProjectionHead(nn.Module):
             ranks = list(range(utils.get_world_size()))
             print('---ALL RANKS----\n{}'.format(ranks))
             procs_per_bunch = args.bunch_size // args.batch_size
+            print( utils.get_world_size(), procs_per_bunch)
             assert utils.get_world_size() % procs_per_bunch == 0
             n_bunch = utils.get_world_size() // procs_per_bunch
             rank_groups = [ranks[i*procs_per_bunch: (i+1)*procs_per_bunch] for i in range(n_bunch)]
@@ -303,14 +345,16 @@ def main(args):
         torch.backends.cudnn.benchmark = False
 
     # =================== Data Preparation =================== 
-    if args.use_lmdb:
-        dataset_train = ImageNetLMDB(args.data_path, 'train.lmdb', get_augmentations(args))
-    else:
-        dataset_train = ImageNet(os.path.join(args.data_path, 'train'), get_augmentations(args))
+    dataset_train = datamodule.train_dataset
+    dataset_train.transforms = get_augmentations(args)
 
     sampler_train = torch.utils.data.DistributedSampler(
         dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
     )
+
+    def collate_fn(features):
+        return [[sample['image'], sample['label']] for sample in features]
+
 
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, sampler=sampler_train,
@@ -318,21 +362,20 @@ def main(args):
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
         drop_last=True,
+        # collate_fn=collate_fn
     )
     
     # prepare evaluation data loader to make unsupervised classification
     if args.dim == 1000 or args.eval_only:
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        val_aug = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            normalize,
-        ])
-        if args.use_lmdb:
-            dataset_val = ImageNetLMDB(args.data_path, 'val.lmdb', val_aug)
-        else:
-            dataset_val = ImageNet(os.path.join(args.data_path, 'val'), val_aug)
+        val_aug = []
+        val_aug.append(DictTransform(['image'], transforms.Resize(224)))
+        val_aug.append(DictTransform(['image'], transforms.ToTensor()))
+        val_aug.append(DictTransform(['image'], normalize))
+        val_aug = transforms.Compose(val_aug)
+
+        dataset_val = datamodule.val_dataset
+        dataset_val.transforms = val_aug
 
         sampler_val = torch.utils.data.DistributedSampler(
             dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False
