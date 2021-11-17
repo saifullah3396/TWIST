@@ -91,7 +91,7 @@ if [ "$SAVE" = "" ]; then
     srun \
         --container-image=/netscratch/$USER/document_analysis_stack.sqsh \
         --container-workdir=/home/$USER/document_analysis_stack \
-        --container-mounts=/netscratch/$USER:/netscratch/$USER,/ds:/ds:ro,/home/$USER/document_analysis_stack:/home/$USER/document_analysis_stack \
+        --container-mounts=/netscratch/$USER:/netscratch/$USER,/ds:/ds:ro,/home/$USER/document_analysis_stack:/home/$USER/document_analysis_stack,/home/$USER/TWIST:/home/$USER/TWIST \
         --task-prolog=./scripts/slurm/install.sh \
         -K \
         --ntasks=$N_GPUS \
@@ -105,7 +105,7 @@ else
     srun \
         --container-image=/netscratch/$USER/document_analysis_stack.sqsh \
         --container-workdir=/home/$USER/document_analysis_stack \
-        --container-mounts=/netscratch/$USER:/netscratch/$USER,/ds:/ds:ro,/home/$USER/document_analysis_stack:/home/$USER/document_analysis_stack \
+        --container-mounts=/netscratch/$USER:/netscratch/$USER,/ds:/ds:ro,/home/$USER/document_analysis_stack:/home/$USER/document_analysis_stack,/home/$USER/TWIST:/home/$USER/TWIST \
         --task-prolog=./scripts/slurm/install.sh \
         -K \
         --ntasks=$N_GPUS \
