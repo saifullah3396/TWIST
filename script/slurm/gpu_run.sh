@@ -1,7 +1,6 @@
 #!/bin/bash -l
 
 N_GPUS=
-=
 PARTITION=
 MEMORY=
 CMD=
