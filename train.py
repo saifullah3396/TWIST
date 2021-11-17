@@ -303,9 +303,6 @@ def main(args):
     if args.crops_interact_style == 'self_label':
         assert args.mme_epochs == args.epochs
 
-    print('orch.cuda.device_count()', torch.cuda.device_count())
-    return
-
     utils.init_distributed_mode(args)
     print(args)
 
