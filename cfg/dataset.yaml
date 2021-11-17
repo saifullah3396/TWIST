@@ -20,12 +20,11 @@ data_args:
   dataloader_num_workers: 4
   tokenize_dataset: False
   dataset_cache_dir: ${NETSCRATCH_DAS}/datasets/
-  use_datadings: False
-  cache_resized_images: False
+  use_datadings: True
+  cache_resized_images: True
   cache_image_size: [224, 224]
   load_data_to_ram: False
   cached_data_name: "resized_224x224"
-  tokenize_dataset: False
   # tokenizer_lib: huggingface
   # tokenizer_name: microsoft/layoutlmv2-base-uncased
   # pad_to_max_length: True
