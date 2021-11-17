@@ -229,7 +229,8 @@ def save_on_master(*args, **kwargs):
 
 
 def init_distributed_mode(args):
-    print(os.environ['SLURM_PROCID'])
+    os.environ['MASTER_ADDR'] = os.environ['SLURM_LAUNCH_NODE_IPADDR']
+   
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         args.rank = int(os.environ["RANK"])
         args.world_size = int(os.environ['WORLD_SIZE'])
