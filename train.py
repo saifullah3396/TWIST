@@ -362,12 +362,19 @@ def main(args):
     
     # prepare evaluation data loader to make unsupervised classification
     if args.dim == 1000 or args.eval_only:
+        from das.data.transforms.grayscale_to_rgb import GrayScaleToRGB
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         val_aug = []
-        val_aug.append(DictTransform(['image'], transforms.Resize(224)))
-        val_aug.append(DictTransform(['image'], transforms.ToTensor()))
-        val_aug.append(DictTransform(['image'], normalize))
+        val_aug.append(GrayScaleToRGB())
+        val_aug.append(transforms.ToPILImage())
+        val_aug.append(transforms.Resize((args.img_size, args.img_size)))
+        val_aug.append(transforms.Resize(224))
+        val_aug.append(transforms.ToTensor())
+        val_aug.append(normalize)
         val_aug = transforms.Compose(val_aug)
+        val_aug = transforms.Compose(
+            [DictTransform(['image'], val_aug)]
+        )
 
         dataset_val = datamodule.val_dataset
         dataset_val.transforms = val_aug
