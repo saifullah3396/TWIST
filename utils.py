@@ -237,6 +237,7 @@ def init_distributed_mode(args):
         os.environ['MASTER_ADDR'] = '127.0.0.1' # os.environ['SLURM_LAUNCH_NODE_IPADDR']
         args.world_size = int(os.environ['WORLD_SIZE'])
         args.rank = int(os.environ['SLURM_PROCID'])
+        print("args,ranks: ", args.rank, args.world_size, torch.cuda.device_count())
         args.gpu = args.rank % torch.cuda.device_count()
     else:
         print('Not using distributed mode')
