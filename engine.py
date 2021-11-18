@@ -211,9 +211,11 @@ def eval_one_epoch(args, model, data_loader, device, epoch=0, set_training_mode=
     print_freq = 10
     real_labels = []
     pred_labels = []
-    all_img_idx = []
+    # all_img_idx = []
     total_probs = []
-    for imgs, real_label, img_idx in metric_logger.log_every(data_loader, print_freq, header):
+    for data in metric_logger.log_every(data_loader, print_freq, header):
+        imgs = data['image']
+        real_label = data['label']
         imgs = imgs.to(device)
         with torch.cuda.amp.autocast(enabled=(True if scaler else False)):
             feats = model(imgs)
@@ -228,25 +230,25 @@ def eval_one_epoch(args, model, data_loader, device, epoch=0, set_training_mode=
         temp_probs = utils.concat_all_gather(all_probs)
         total_probs.append(temp_probs)
 
-        img_idx_cat = utils.concat_all_gather(img_idx.to(device).long())
-        all_img_idx.append(img_idx_cat)
+        # img_idx_cat = utils.concat_all_gather(img_idx.to(device).long())
+        # all_img_idx.append(img_idx_cat)
         torch.cuda.synchronize()
     
     pred_labels = torch.cat(pred_labels).cpu().detach().numpy()
     real_labels = torch.cat(real_labels).cpu().detach().numpy()
-    all_img_idx = torch.cat(all_img_idx).cpu().detach().numpy()
+    # all_img_idx = torch.cat(all_img_idx).cpu().detach().numpy()
     total_probs = torch.cat(total_probs, dim=0).cpu().detach().numpy()
 
-    ordered_real_labels = np.ones(len(all_img_idx))
-    ordered_real_labels[all_img_idx] = real_labels
-    ordered_pred_labels = np.ones(len(all_img_idx))
-    ordered_pred_labels[all_img_idx] = pred_labels
-    ordered_total_probs = np.ones_like(total_probs)
-    ordered_total_probs[all_img_idx] = total_probs
+    # ordered_real_labels = np.ones(len(all_img_idx))
+    # ordered_real_labels[all_img_idx] = real_labels
+    # ordered_pred_labels = np.ones(len(all_img_idx))
+    # ordered_pred_labels[all_img_idx] = pred_labels
+    # ordered_total_probs = np.ones_like(total_probs)
+    # ordered_total_probs[all_img_idx] = total_probs
 
-    np.save('ordered_real_labels.npy', ordered_real_labels)
-    np.save('ordered_pred_labels.npy', ordered_pred_labels)
-    nmi, ami, ari, fscore, adjacc, image_match, mapped_preds, top5 = eval_pred(ordered_real_labels.astype(int), ordered_pred_labels.astype(int), calc_acc=(args.dim==1000), total_probs=ordered_total_probs)
+    np.save('ordered_real_labels.npy', real_labels)
+    np.save('ordered_pred_labels.npy', pred_labels)
+    nmi, ami, ari, fscore, adjacc, image_match, mapped_preds, top5 = eval_pred(real_labels.astype(int), pred_labels.astype(int), calc_acc=(args.dim==16), total_probs=total_probs)
 
     print("NMI: {}, AMI: {}, ARI: {}, F: {}, ACC: {}, ACC-Top5: {}".format(nmi, ami, ari, fscore, adjacc, top5))
     metric_logger.synchronize_between_processes()
