@@ -197,8 +197,9 @@ def train_one_epoch(args, model, criterion, data_loader, optimizer, device, epoc
     return_dic = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
     if args.enable_watch or (epoch + 1) % 10 == 0:
         start_time_evalcluster = time.time()
-        nmi, ami, ari, fscore, adjacc = eval_pred(real_labels, pred_labels, calc_acc=True)
+        nmi, ami, ari, fscore, adjacc, match, reordered_preds = eval_pred(real_labels, pred_labels, calc_acc=True)
         print("NMI: {}, AMI: {}, ARI: {}, F: {}, ACC: {}".format(nmi, ami, ari, fscore, adjacc))
+        print(match, reordered_preds)
         return_dic.update({"nmi": nmi, "ami": ami, "ari": ari, "fscore": fscore, "adjacc": adjacc})
         end_time_evalcluster = time.time()
         print("calculating clustering indicators {}".format(end_time_evalcluster-start_time_evalcluster))
