@@ -361,7 +361,7 @@ def main(args):
     )
     
     # prepare evaluation data loader to make unsupervised classification
-    if args.dim == 1000 or args.eval_only:
+    if args.dim == 16 or args.eval_only:
         from das.data.transforms.grayscale_to_rgb import GrayScaleToRGB
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         val_aug = []
@@ -547,7 +547,7 @@ def main(args):
             break
         
         # only dim=1000 evaluate unsupervised classification
-        if args.dim == 1000:
+        if args.dim == 16:
             eval_stats = eval_one_epoch(args, 
                     model, data_loader_val, device, 
                     logfn=os.path.join(output_dir, 'detail_log.txt')
