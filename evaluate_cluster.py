@@ -19,8 +19,8 @@ def evaluate(label, pred, calc_acc=False, total_probs=None):
     f = metrics.fowlkes_mallows_score(label, pred)
     if not calc_acc:
         return nmi, ami, ari, f, -1
-    #pred_adjusted = get_y_preds(label, pred, len(set(label)))
-    #acc = metrics.accuracy_score(pred_adjusted, label)
+    pred_adjusted = get_y_preds(label, pred, len(set(label)))
+    acc = metrics.accuracy_score(pred_adjusted, label)
     if total_probs is not None:
         acc, match, reordered_preds, top5 = hungarian_evaluate(torch.Tensor(label).cuda(), torch.Tensor(pred).cuda(), torch.Tensor(total_probs).cuda())
         return nmi, ami, ari, f, acc, match, reordered_preds.cpu().detach().numpy(), top5

@@ -343,7 +343,6 @@ def main(args):
     # prepare the modules
     datamodule.prepare_data()
     datamodule.setup()
-    dataset = datamodule.train_dataset
 
     dataset_train = datamodule.train_dataset
     dataset_train.transforms = get_augmentations(args)

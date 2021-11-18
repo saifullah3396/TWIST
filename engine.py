@@ -136,6 +136,7 @@ def train_one_epoch(args, model, criterion, data_loader, optimizer, device, epoc
         pred1 = utils.concat_all_gather(all_probs[0].max(dim=1)[1]) 
         pred2 = utils.concat_all_gather(all_probs[1].max(dim=1)[1]) 
         acc = (pred1 == pred2).sum()/pred1.size(0)
+        print(pred1, pred2)
         pred_labels.append(pred1)
         real_labels.append(utils.concat_all_gather(real_label.to(device).long()))
 
@@ -195,7 +196,7 @@ def train_one_epoch(args, model, criterion, data_loader, optimizer, device, epoc
     return_dic = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
     if args.enable_watch or (epoch + 1) % 10 == 0:
         start_time_evalcluster = time.time()
-        nmi, ami, ari, fscore, adjacc = eval_pred(real_labels, pred_labels, calc_acc=False)
+        nmi, ami, ari, fscore, adjacc = eval_pred(real_labels, pred_labels, calc_acc=True)
         print("NMI: {}, AMI: {}, ARI: {}, F: {}, ACC: {}".format(nmi, ami, ari, fscore, adjacc))
         return_dic.update({"nmi": nmi, "ami": ami, "ari": ari, "fscore": fscore, "adjacc": adjacc})
         end_time_evalcluster = time.time()
