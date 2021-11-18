@@ -136,9 +136,10 @@ def train_one_epoch(args, model, criterion, data_loader, optimizer, device, epoc
         pred1 = utils.concat_all_gather(all_probs[0].max(dim=1)[1]) 
         pred2 = utils.concat_all_gather(all_probs[1].max(dim=1)[1]) 
         acc = (pred1 == pred2).sum()/pred1.size(0)
-        print(pred1, pred2)
         pred_labels.append(pred1)
         real_labels.append(utils.concat_all_gather(real_label.to(device).long()))
+        print(pred_labels)
+        print(real_labels)
 
         if scaler:
             scaler.scale(loss['final']).backward()
