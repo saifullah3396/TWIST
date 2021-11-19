@@ -4,6 +4,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import numpy as np
 import utils
 import random
 import torch
@@ -34,6 +35,27 @@ class EntLoss(nn.Module):
 
         loss['final'] = loss['kl'] + ((1+self.lam1)*loss['eh'] - self.lam2*loss['he'])
         return loss
+
+
+# Entropy function
+def entropy(prob_dist, normalize=True):
+    entropy = -sum([p * math.log2(p) for p in prob_dist if p != 0])
+    if normalize:
+        max_entropy = math.log2(prob_dist.shape[0])
+        return entropy/max_entropy
+    return entropy
+
+# Calculates the JSD for multiple probability distributions
+def JSD(self, prob_dists):
+    weight = 1/len(prob_dists)              # Set weights to be uniform
+    js_left = np.zeros(len(prob_dists[0]))  
+    js_right = 0
+    for pd in prob_dists:
+        js_left += pd * weight
+        js_right += weight * entropy(pd, normalize=False)
+
+    jsd = self.entropy(js_left, normalize=False)-js_right
+    return jsd
 
 def KL(probs1, probs2, args):
     kl = (probs1 * (probs1 + args.EPS).log() - probs1 * (probs2 + args.EPS).log()).sum(dim=1)

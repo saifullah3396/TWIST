@@ -52,6 +52,7 @@ def train_one_epoch(args, model, criterion, data_loader, optimizer, device, epoc
             all_feats = feat.chunk(2+args.local_crops_number)
             all_probs = [torch.nn.functional.softmax(f/args.tau, dim=-1) for f in all_feats]
             n_views = len(all_feats)
+            # print('nevews', n_views)
 
             if args.use_momentum_encoder and args.crops_interact_style == 'sparse' and epoch < args.mme_epochs:
                 teacher_output = teacher_model(imgs[:2]) # 2B * dim

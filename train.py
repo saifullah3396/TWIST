@@ -368,7 +368,6 @@ def main(args):
         val_aug.append(GrayScaleToRGB())
         val_aug.append(transforms.ToPILImage())
         val_aug.append(transforms.Resize((args.img_size, args.img_size)))
-        val_aug.append(transforms.Resize(224))
         val_aug.append(transforms.ToTensor())
         val_aug.append(normalize)
         val_aug = transforms.Compose(val_aug)
