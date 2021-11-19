@@ -14,6 +14,9 @@ import signal
 import sys
 import time
 import urllib
+
+from torchvision.transforms.transforms import ConvertImageDtype
+from train import parse_args
 import widen_resnet
 
 from torch import nn, optim
@@ -29,7 +32,6 @@ warnings.filterwarnings('ignore')
 from torchvision.datasets.folder import default_loader
 from utils import MeanPerClassAccuracy
 import utils
-from datasets import ListData, ListDataSun, ListDataFood, ListDataDTD, VOC2007_dataset, Flowers102Data, AircraftData, CIFAR10, CIFAR100
 import vision_transformer as vits
 
 class ImageNetLMDB(imlmdb):
@@ -117,14 +119,13 @@ def main_worker(gpu, args):
         model = widen_resnet.__dict__[args.backbone]().cuda(gpu)
     else:
         model = vits.__dict__[args.backbone](patch_size=16, num_classes=16, classification=1).cuda(gpu)
-
     if args.pretrained != '':
         if args.key != 'none':
             state_dict = torch.load(args.pretrained, map_location='cpu')[args.key]
-            missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+            missing_keys, unexpected_keys = model.load_state_dict(state_dict['backbone'], strict=False)
         else:
             state_dict = torch.load(args.pretrained, map_location='cpu')
-            missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+            missing_keys, unexpected_keys = model.load_state_dict(state_dict['backbone'], strict=False)
 
         assert missing_keys == ['fc.weight', 'fc.bias'] and unexpected_keys == []
     else:
@@ -169,34 +170,54 @@ def main_worker(gpu, args):
     valdir = args.data / 'val'
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
+    from das.data.transforms.grayscale_to_rgb import GrayScaleToRGB
+    from das.data.transforms.dict_transform import DictTransform
     train_transform = transforms.Compose([
-                        transforms.RandomResizedCrop(224),
+                        GrayScaleToRGB(),
+                        transforms.Resize((224, 224)),
+                        ConvertImageDtype(torch.float),
                         transforms.RandomHorizontalFlip(),
-                        transforms.ToTensor(),
                         normalize,
     ])
     val_transform = transforms.Compose([
-                        transforms.Resize(256),
-                        transforms.CenterCrop(224),
-                        transforms.ToTensor(),
+                        GrayScaleToRGB(),
+                        transforms.Resize((224, 224)),
+                        ConvertImageDtype(torch.float),
                         normalize,
     ])
-    if args.use_lmdb:
-        if args.train_percent == 100: train_list_file = 'train.lmdb'
-        elif args.train_percent == 10: train_list_file = 'train_10percent.lmdb'
-        elif args.train_percent == 1: train_list_file = 'train_1percent.lmdb'
-        train_dataset = ImageNetLMDB(root=args.data, list_file=train_list_file, transform=train_transform)
-        val_dataset = ImageNetLMDB(root=args.data, list_file='val.lmdb', transform=val_transform)
-    else:
-        train_dataset = datasets.ImageFolder(traindir, train_transform)
-        val_dataset = datasets.ImageFolder(valdir, val_transform)
-        if args.train_percent in {1, 10}:
-            train_dataset.samples = []
-            for fname in args.train_files:
-                fname = fname.decode().strip()
-                cls = fname.split('_')[0]
-                train_dataset.samples.append(
-                    (traindir / cls / fname, train_dataset.class_to_idx[cls]))
+    train_transform = transforms.Compose(
+        [DictTransform(['image'], train_transform)]
+    )
+    val_transform = transforms.Compose(
+        [DictTransform(['image'], val_transform)]
+    )
+
+    # if args.use_lmdb:
+    #     if args.train_percent == 100: train_list_file = 'train.lmdb'
+    #     elif args.train_percent == 10: train_list_file = 'train_10percent.lmdb'
+    #     elif args.train_percent == 1: train_list_file = 'train_1percent.lmdb'
+    #     train_dataset = ImageNetLMDB(root=args.data, list_file=train_list_file, transform=train_transform)
+    #     val_dataset = ImageNetLMDB(root=args.data, list_file='val.lmdb', transform=val_transform)
+    # else:
+
+    # parse arguments
+    cfg = './cfg/dataset.yaml'
+    basic_args, data_args = parse_args(cfg)
+    from das.data.data_modules.base import DataModuleFactory
+
+    # initialize data-handling module, set collate_fns later
+    datamodule = DataModuleFactory.create_datamodule(
+        basic_args, data_args)
+
+    # prepare the modules
+    datamodule.prepare_data()
+    datamodule.setup()
+
+    train_dataset = datamodule.train_dataset
+    train_dataset.transforms = train_transform
+    val_dataset = datamodule.val_dataset
+    val_dataset.transforms = val_transform
+
 
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     kwargs = dict(batch_size=args.batch_size // args.world_size, num_workers=args.workers, pin_memory=True)
@@ -214,7 +235,9 @@ def main_worker(gpu, args):
         elif args.weights == 'freeze':
             model.eval()
         train_sampler.set_epoch(epoch)
-        for step, (images, target) in enumerate(train_loader, start=epoch * len(train_loader)):
+        for step, data in enumerate(train_loader, start=epoch * len(train_loader)):
+            images = data['image']
+            target = data['label']
             output = model(images.cuda(gpu, non_blocking=True))
             target = target.long()
             loss = criterion(output, target.cuda(gpu, non_blocking=True))
