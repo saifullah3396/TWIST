@@ -278,15 +278,15 @@ def main_worker(gpu, args):
             print(json.dumps(stats), file=stats_file)
 
         # sanity check
-        if args.weights == 'freeze':
-            try:
-                reference_state_dict = torch.load(args.pretrained, map_location='cpu')[args.key]
-                model_state_dict = model.module.state_dict()
-                for k in reference_state_dict:
-                    assert torch.equal(model_state_dict[k].cpu(), reference_state_dict[k]), k
-            except:
-                print('state_dict wrong')
-                exit()
+        # if args.weights == 'freeze':
+        #     try:
+        #         reference_state_dict = torch.load(args.pretrained, map_location='cpu')[args.key]
+        #         model_state_dict = model.module.state_dict()
+        #         for k in reference_state_dict:
+        #             assert torch.equal(model_state_dict[k].cpu(), reference_state_dict[k]), k
+        #     except:
+        #         print('state_dict wrong')
+        #         exit()
 
         scheduler.step()
         if args.rank == 0:
