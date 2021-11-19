@@ -263,7 +263,9 @@ def main_worker(gpu, args):
             top1 = AverageMeter('Acc@1')
             top5 = AverageMeter('Acc@5')
             with torch.no_grad():
-                for images, target in val_loader:
+                for data in val_loader:
+                    images = data['image']
+                    target = data['label']
                     output = model(images.cuda(gpu, non_blocking=True))
 
                     acc1, acc5 = accuracy(output, target.cuda(gpu, non_blocking=True), topk=(1, 5))
