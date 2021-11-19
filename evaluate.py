@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser(description='Evaluate resnet50 features on Imag
 parser.add_argument('data', type=Path, metavar='DIR',
                     help='path to dataset')
 parser.add_argument('pretrained', type=str, help='path to pretrained model')
-parser.add_argument('--dataset', default='imagenet', type=str)
+parser.add_argument('--dataset', default='rvlcdip', type=str)
 parser.add_argument('--mode', default='dev', type=str)
 parser.add_argument('--backbone', default='resnet50', type=str)
 parser.add_argument('--weights', default='freeze', type=str,
@@ -109,14 +109,14 @@ def main_worker(gpu, args):
 
     torch.cuda.set_device(gpu)
     torch.backends.cudnn.benchmark = True
-    NCLS = {'imagenet': 1000}
+    NCLS = {'rvlcdip': 16}
     args.num_classes = NCLS[args.dataset]
     
     if args.backbone.startswith('resnet'):
         widen_resnet.__dict__['resnet50'] = torchvision.models.resnet50
         model = widen_resnet.__dict__[args.backbone]().cuda(gpu)
     else:
-        model = vits.__dict__[args.backbone](patch_size=16, num_classes=1000, classification=1).cuda(gpu)
+        model = vits.__dict__[args.backbone](patch_size=16, num_classes=16, classification=1).cuda(gpu)
 
     if args.pretrained != '':
         if args.key != 'none':
