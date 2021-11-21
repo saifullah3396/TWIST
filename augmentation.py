@@ -49,9 +49,13 @@ class RandomResizedCropCustom(RandomResizedCrop):
             if 0 < w <= width and 0 < h <= height:
                 # mask = region_mask[h//2:height-h//2, w//2:width-w//2]
                 pixel_list = region_mask.nonzero()
-                p_idx = torch.randint(0, max(1, len(pixel_list)), size=(1, )).item()
-                i = pixel_list[p_idx][0] - h // 2
-                j = pixel_list[p_idx][1] - w // 2
+                if len(pixel_list) == 0:
+                    i = torch.randint(0, height - h + 1, size=(1,)).item()
+                    j = torch.randint(0, width - w + 1, size=(1,)).item()
+                else:
+                    p_idx = torch.randint(0, len(pixel_list), size=(1, )).item()
+                    i = pixel_list[p_idx][0] - h // 2
+                    j = pixel_list[p_idx][1] - w // 2
                 i = int(torch.clip(i, min=0, max=height - h - 1))
                 j = int(torch.clip(j, min=0, max=width - w - 1))
                     
