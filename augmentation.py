@@ -56,8 +56,8 @@ class RandomResizedCropCustom(RandomResizedCrop):
                     p_idx = torch.randint(0, len(pixel_list), size=(1, )).item()
                     i = pixel_list[p_idx][0] - h // 2
                     j = pixel_list[p_idx][1] - w // 2
-                i = int(torch.clip(i, min=0, max=height - h - 1))
-                j = int(torch.clip(j, min=0, max=width - w - 1))
+                    i = int(torch.clip(i, min=0, max=height - h - 1))
+                    j = int(torch.clip(j, min=0, max=width - w - 1))
                     
                 return i, j, h, w
 
