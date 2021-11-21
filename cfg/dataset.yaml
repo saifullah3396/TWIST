@@ -12,31 +12,51 @@ basic_args:
 data_args:
   dataset_name: rvlcdip
   dataset_dir: ${ROOT_DIR}netscratch/saifullah/rvl-cdip-wo-tobacco3842/
-  per_device_train_batch_size: 1
-  per_device_eval_batch_size: 1
-  dataloader_drop_last: False
-  shuffle_data: True
-  pin_memory: True
-  dataloader_num_workers: 4
-  tokenize_dataset: False
-  dataset_cache_dir: ${NETSCRATCH_DAS}/datasets/
-  use_datadings: False
-  cache_resized_images: False
-  cache_image_size: [224, 224]
-  load_data_to_ram: False
-  cached_data_name: "resized_224x224"
-  # tokenizer_lib: huggingface
-  # tokenizer_name: microsoft/layoutlmv2-base-uncased
-  # pad_to_max_length: True
-  # max_train_samples: 100
-  # max_val_samples: 100
-  # max_test_samples: null
-  # label_all_tokens: False
-  train_val_sampling_strategy: null
-  random_split_ratio: 0
-  # k_folds: 1
-  normalize_dataset: False
-  load_images: True
-  convert_grayscale_to_rgb: False
-  convert_rgb_to_bgr: False
-  aspect_ratio_grouping_factor: -1
+  data_caching_args:
+    use_datadings: False
+    cache_resized_images: True
+    cache_image_size: [224, 224]
+    load_data_to_ram: False
+    cached_data_name: resized_224x224
+    dataset_cache_dir: ${NETSCRATCH_DAS}/datasets/
+  data_splitting_args: null
+    # train_val_sampling_strategy: null
+    # random_split_ratio: 0
+    # k_folds: 5
+  data_transforms_args: null
+    # train_image_rescale_strategy:
+    #   name: rescale_simple
+    #   params:
+    #     rescale_dim: 4
+    #     rescale_both_dims: True
+    # eval_image_rescale_strategy:
+    #   name: rescale_simple
+    #   params:
+    #     rescale_dim: 4
+    #     rescale_both_dims: True
+    # normalize_dataset: True
+    # convert_grayscale_to_rgb: True
+    # convert_rgb_to_bgr: False
+    # use_dataset_normalization_params: False
+    # dataset_mean:
+    #   image: [0.485, 0.456, 0.406]
+    # dataset_std:
+    #   image: [0.229, 0.224, 0.225]
+  data_loader_args:
+    per_device_train_batch_size: 64
+    per_device_eval_batch_size: 64
+    dataloader_drop_last: False
+    shuffle_data: True
+    pin_memory: True
+    dataloader_num_workers: 0
+    # max_train_samples: 100
+    # max_val_samples: 100
+    # max_test_samples: 100
+    # aspect_ratio_grouping_factor: -1
+  data_tokenization_args:
+    tokenize_dataset: False
+    # tokenizer_name: basic_english
+    # tokenizer_lib: torchtext
+    # pad_to_max_length: True
+    # # label_all_tokens: False
+  extras: null

@@ -149,7 +149,7 @@ def get_args_parser():
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
-    parser.add_argument('--num_workers', default=10, type=int)
+    parser.add_argument('--num_workers', default=0, type=int)
     parser.add_argument('--pin-mem', action='store_true', help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
     parser.add_argument('--no-pin-mem', action='store_false', dest='pin_mem', help='')
     parser.set_defaults(pin_mem=True)
@@ -334,7 +334,7 @@ def main(args):
     # parse arguments
     cfg = './cfg/dataset.yaml'
     basic_args, data_args = parse_args(cfg)
-    from das.data.data_modules.base import DataModuleFactory
+    from das.data.data_modules.factory import DataModuleFactory
 
     # initialize data-handling module, set collate_fns later
     datamodule = DataModuleFactory.create_datamodule(

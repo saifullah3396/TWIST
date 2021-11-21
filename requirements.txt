@@ -5,3 +5,4 @@ tqdm
 tensorboardX
 sklearn
 munkres
+ocrodeg
