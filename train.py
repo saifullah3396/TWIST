@@ -359,13 +359,13 @@ def main(args):
         drop_last=True,
         # collate_fn=collate_fn
     )
-    import matplotlib.pyplot as plt
-    for data in data_loader_train:
-        plt.imshow(data['image'][0][0].permute(1, 2, 0))
-        plt.show()
-        plt.imshow(data['image'][0][1].permute(1, 2, 0))
-        plt.show()
-    exit(1)
+    # import matplotlib.pyplot as plt
+    # for data in data_loader_train:
+    #     plt.imshow(data['image'][0][0].permute(1, 2, 0))
+    #     plt.show()
+    #     plt.imshow(data['image'][0][1].permute(1, 2, 0))
+    #     plt.show()
+    # exit(1)
     
     # prepare evaluation data loader to make unsupervised classification
     if args.dim == 16 or args.eval_only:
