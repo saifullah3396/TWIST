@@ -91,7 +91,7 @@ class RandomResizedCropCustom(RandomResizedCrop):
 
 class RandomResizedMaskedCrop(object):
     def __init__(self, img_size):
-        self.t = RandomResizedCropCustom((img_size,img_size), scale=(0.05, 0.15))
+        self.t = RandomResizedCropCustom((img_size,img_size), scale=(0.2, 0.6))
 
     def get_black_and_white_regions_mask(self, image_tensor):
         black_and_white_threshold = 0.5
@@ -107,7 +107,7 @@ class RandomResizedMaskedCrop(object):
         return ((black_and_white_regions_fast).float())
         
     def __call__(self, img):
-        return self.t(img, self.get_black_and_white_regions_mask(img))
+        return self.t(img, self.get_black_and_white_regions_mask(img)) / 255.
 
 class Blotches(object):
     def __call__(self, img):
@@ -126,7 +126,7 @@ class DocumentAugmentations2(object):
     def __init__(self, args):
         self.aug1 = transforms.Compose([
             RandomResizedMaskedCrop(args.img_size),
-            transforms.RandomApply([BinaryBlur()], p=0.5),
+            # transforms.RandomApply([BinaryBlur()], p=0.5),
             transforms.RandomHorizontalFlip(p=0.5),
             GrayScaleToRGB(),
             transforms.ToPILImage(),
@@ -141,8 +141,8 @@ class DocumentAugmentations2(object):
         ])
         self.aug2 = transforms.Compose([
             RandomResizedMaskedCrop(args.img_size),            
-            transforms.RandomApply([Blotches()], p=0.2),
-            transforms.RandomApply([BinaryBlur()], p=0.5),
+            # transforms.RandomApply([Blotches()], p=0.2),
+            # transforms.RandomApply([BinaryBlur()], p=0.5),
             transforms.RandomHorizontalFlip(p=0.5),
             GrayScaleToRGB(),
             transforms.ToPILImage(),
@@ -193,7 +193,7 @@ def get_augmentations(args):
     if args.aug == 'docs':
         return \
             transforms.Compose([
-                DictTransform(['image'], DocumentAugmentations2(args))])
+                DictTransform(['image'], DocumentAugmentations(args))])
     if args.aug == 'multicrop':
         return MultiCropAugmentation(args)
     if args.aug == 'multicropeval':
@@ -223,27 +223,28 @@ class RandAugmentation(object):
 class DocumentAugmentations(object):
     def __init__(self, args):
         self.aug1 = transforms.Compose([
+            RandomResizedMaskedCrop(args.img_size),
             GrayScaleToRGB(),
             transforms.ToPILImage(),
             transforms.Resize((args.img_size, args.img_size)),
             transforms.RandomApply(
                 [   
-                    transforms.RandomAffine((-5, 5))], 
+                    transforms.RandomAffine((-1, 1), fill=255)], 
                 p=0.5
             ),
+            # transforms.RandomApply(
+            #     [   
+            #         transforms.RandomAffine(0, translate=(0.1, 0.1), fill=255)], 
+            #     p=0.5
+            # ),
+            # transforms.RandomApply(
+            #     [   
+            #         transforms.RandomAffine(0, scale=(0.9, 1.0), fill=255)], 
+            #     p=0.5
+            # ),
             transforms.RandomApply(
                 [   
-                    transforms.RandomAffine(0, translate=(0.2, 0.2))], 
-                p=0.5
-            ),
-            transforms.RandomApply(
-                [   
-                    transforms.RandomAffine(0, scale=(0.8, 1.0))], 
-                p=0.5
-            ),
-            transforms.RandomApply(
-                [   
-                    transforms.RandomAffine(0, shear=(-5, 5))], 
+                    transforms.RandomAffine(0, shear=(-1, 1), fill=255)], 
                 p=0.5
             ),
 
@@ -258,30 +259,30 @@ class DocumentAugmentations(object):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         self.aug2 = transforms.Compose([
+            RandomResizedMaskedCrop(args.img_size),
             GrayScaleToRGB(),
             transforms.ToPILImage(),
             transforms.Resize((args.img_size, args.img_size)),
             transforms.RandomApply(
                 [   
-                    transforms.RandomAffine((-5, 5))], 
+                    transforms.RandomAffine((-1, 1), fill=255)], 
                 p=0.5
             ),
+            # transforms.RandomApply(
+            #     [   
+            #         transforms.RandomAffine(0, translate=(0.1, 0.1), fill=255)], 
+            #     p=0.5
+            # ),
+            # transforms.RandomApply(
+            #     [   
+            #         transforms.RandomAffine(0, scale=(0.9, 1.0), fill=255)], 
+            #     p=0.5
+            # ),
             transforms.RandomApply(
                 [   
-                    transforms.RandomAffine(0, translate=(0.2, 0.2))], 
+                    transforms.RandomAffine(0, shear=(-1, 1), fill=255)], 
                 p=0.5
             ),
-            transforms.RandomApply(
-                [   
-                    transforms.RandomAffine(0, scale=(0.8, 1.0))], 
-                p=0.5
-            ),
-            transforms.RandomApply(
-                [   
-                    transforms.RandomAffine(0, shear=(-5, 5))], 
-                p=0.5
-            ),
-
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomApply(
                 [transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1)],
