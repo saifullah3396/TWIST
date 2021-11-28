@@ -203,7 +203,7 @@ def main_worker(gpu, args):
     # parse arguments
     cfg = './cfg/dataset.yaml'
     basic_args, data_args = parse_args(cfg)
-    from das.data.data_modules.base import DataModuleFactory
+    from das.data.data_modules.factory import DataModuleFactory
 
     # initialize data-handling module, set collate_fns later
     datamodule = DataModuleFactory.create_datamodule(
